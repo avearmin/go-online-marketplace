@@ -28,7 +28,7 @@ func main() {
 		}
 		w.WriteHeader(http.StatusOK)
 	})
-	
+
 	corsMux := middlewareCors(mux)
 
 	srv := http.Server{
