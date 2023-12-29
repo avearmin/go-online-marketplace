@@ -29,9 +29,11 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
+	corsMux := middlewareCors(mux)
+
 	srv := http.Server{
 		Addr:         ":" + port,
-		Handler:      mux,
+		Handler:      corsMux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
