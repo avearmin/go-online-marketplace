@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -29,9 +30,13 @@ func main() {
 	})
 
 	srv := http.Server{
-		Addr:    ":" + port,
-		Handler: mux,
+		Addr:         ":" + port,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
-	srv.ListenAndServe()
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
 }
