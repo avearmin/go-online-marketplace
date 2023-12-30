@@ -21,13 +21,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/v1/status", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	})
+	mux.HandleFunc("/v1/status", handleStatus)
 
 	corsMux := middlewareCors(mux)
 
