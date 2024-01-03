@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/avearmin/gorage-sale/internal/database"
@@ -28,6 +29,16 @@ func (cfg apiConfig) postUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := decoder.Decode(&parameters); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid JSON format")
+		return
+	}
+
+	if parameters.Name == "" {
+		respondWithError(w, http.StatusBadRequest, "Invalid name")
+		return
+	}
+	if ok := verifyEmail(parameters.Email); !ok {
+		respondWithError(w, http.StatusBadRequest, "Invalid Email format")
+		return
 	}
 
 	user, err := cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
@@ -39,7 +50,34 @@ func (cfg apiConfig) postUsers(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error creating user in DB")
+		return
 	}
 
 	respondWithJSON(w, http.StatusOK, dbUserToJSONUser(user))
+}
+
+func verifyEmail(email string) bool {
+	emailFields := strings.Split(email, "@")
+	if len(emailFields) != 2 {
+		return false
+	}
+
+	username := emailFields[0]
+	domain := emailFields[1]
+	if username == "" || domain == "" {
+		return false
+	}
+
+	domainFields := strings.Split(domain, ".")
+	if len(domainFields) < 2 {
+		return false
+	}
+
+	mailServer := domainFields[0]
+	topLevelDomain := domainFields[1]
+	if mailServer == "" || topLevelDomain == "" {
+		return false
+	}
+
+	return true
 }
