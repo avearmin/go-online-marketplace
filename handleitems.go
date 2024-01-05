@@ -64,7 +64,7 @@ func (cfg apiConfig) postItems(w http.ResponseWriter, r *http.Request) {
 }
 
 func validateItemName(name string) bool {
-	return name != "" && len(name) <= 255
+	return name != "" && len(name) <= 72
 }
 
 func validateItemDescription(description string) bool {
