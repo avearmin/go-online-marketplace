@@ -47,6 +47,7 @@ func main() {
 
 	if config.DB != nil {
 		mux.HandleFunc("/v1/users", config.handleUsers)
+		mux.HandleFunc("/v1/items", config.handleItems)
 	}
 
 	corsMux := middlewareCors(mux)
