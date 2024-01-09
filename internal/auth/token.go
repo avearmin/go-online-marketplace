@@ -8,16 +8,18 @@ import (
 	"github.com/google/uuid"
 )
 
+type timeNowFunc func() time.Time
+
 const (
 	AccessIssuer  string = "gorage-sale-access"
 	RefreshIssuer string = "gorage-sale-refresh"
 )
 
-func CreateJWT(id uuid.UUID, jwtSecret string, expiresIn time.Duration, issuer string) (string, error) {
+func createJWT(id uuid.UUID, jwtSecret string, expiresIn time.Duration, issuer string, nowFunc timeNowFunc) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    issuer,
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
+		IssuedAt:  jwt.NewNumericDate(nowFunc()),
+		ExpiresAt: jwt.NewNumericDate(nowFunc().Add(expiresIn)),
 		Subject:   id.String(),
 	})
 	signedToken, err := token.SignedString([]byte(jwtSecret))
@@ -28,13 +30,18 @@ func CreateJWT(id uuid.UUID, jwtSecret string, expiresIn time.Duration, issuer s
 }
 
 func CreateAccessToken(id uuid.UUID, jwtSecret string) (string, error) {
-	expiresIn := 1 * time.Hour
-	return CreateJWT(id, jwtSecret, expiresIn, AccessIssuer)
+	expiresIn := calcExpiry(1)
+	return createJWT(id, jwtSecret, expiresIn, AccessIssuer, time.Now)
 }
 
 func CreateRefreshToken(id uuid.UUID, jwtSecret string) (string, error) {
-	expiresIn := (60 * 24) * time.Hour
-	return CreateJWT(id, jwtSecret, expiresIn, RefreshIssuer)
+	twoMonthsInHours := 1440
+	expiresIn := calcExpiry(twoMonthsInHours)
+	return createJWT(id, jwtSecret, expiresIn, RefreshIssuer, time.Now)
+}
+
+func calcExpiry(hours int) time.Duration {
+	return time.Duration(hours) * time.Hour
 }
 
 func ValidateJWT(jwtString, jwtSecret string) (uuid.UUID, error) {
