@@ -62,6 +62,26 @@ func TestCreateJWT(t *testing.T) {
 
 }
 
+func TestCalcExpiry(t *testing.T) {
+	testCases := map[string]struct {
+		input    int
+		want time.Duration
+	}{
+		"1 hour": {1, time.Duration(3600000000000)},
+		"0 hours": {0, time.Duration(0)},
+		"24 hours": {24, time.Duration(86400000000000)},
+		"negative hours": {-5, time.Duration(0)},
+	}
+
+	for name, test := range testCases {
+		t.Run(name, func(t *testing.T) {
+			if got, _ := calcExpiry(test.input); got != test.want {
+				t.Fatalf("|TEST: %20s| got: %5v, want: %5v", name, got, test.want)
+			}
+		})
+	}
+}
+
 func mockTimeNow() time.Time {
 	return time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
 }

@@ -30,18 +30,27 @@ func createJWT(id uuid.UUID, jwtSecret string, expiresIn time.Duration, issuer s
 }
 
 func CreateAccessToken(id uuid.UUID, jwtSecret string) (string, error) {
-	expiresIn := calcExpiry(1)
+	expiresIn, err := calcExpiry(1)
+	if err != nil {
+		return "", err
+	}
 	return createJWT(id, jwtSecret, expiresIn, AccessIssuer, time.Now)
 }
 
 func CreateRefreshToken(id uuid.UUID, jwtSecret string) (string, error) {
 	twoMonthsInHours := 1440
-	expiresIn := calcExpiry(twoMonthsInHours)
+	expiresIn, err := calcExpiry(twoMonthsInHours)
+	if err != nil {
+		return "", err
+	}
 	return createJWT(id, jwtSecret, expiresIn, RefreshIssuer, time.Now)
 }
 
-func calcExpiry(hours int) time.Duration {
-	return time.Duration(hours) * time.Hour
+func calcExpiry(hours int) (time.Duration, error) {
+	if hours < 0 {
+		return 0, errors.New("Negative hours")
+	}
+	return time.Duration(hours) * time.Hour, nil
 }
 
 func ValidateJWT(jwtString, jwtSecret string) (uuid.UUID, error) {
