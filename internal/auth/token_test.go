@@ -59,21 +59,20 @@ func TestCreateJWT(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestCalcExpiry(t *testing.T) {
-	testCases := map[string]struct {
-		input    int
-		want time.Duration
+	tests := map[string]struct {
+		input int
+		want  time.Duration
 	}{
-		"1 hour": {1, time.Duration(3600000000000)},
-		"0 hours": {0, time.Duration(0)},
-		"24 hours": {24, time.Duration(86400000000000)},
+		"1 hour":         {1, time.Duration(3600000000000)},
+		"0 hours":        {0, time.Duration(0)},
+		"24 hours":       {24, time.Duration(86400000000000)},
 		"negative hours": {-5, time.Duration(0)},
 	}
 
-	for name, test := range testCases {
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			if got, _ := calcExpiry(test.input); got != test.want {
 				t.Fatalf("|TEST: %20s| got: %5v, want: %5v", name, got, test.want)
@@ -82,6 +81,61 @@ func TestCalcExpiry(t *testing.T) {
 	}
 }
 
+func TestValidateJWT(t *testing.T) {
+	expectedId, _ := uuid.Parse("123e4567-e89b-12d3-a456-426614174000")
+	viableToken, _ := CreateAccessToken(expectedId, "secret")
+	expiredToken := createExpiredToken(expectedId, "secret")
+
+	type Input struct {
+		jwtString string
+		jwtSecret string
+	}
+
+	tests := map[string]struct {
+		input Input
+		want  uuid.UUID
+	}{
+		"Normal JWT": {
+			input: Input{
+				jwtString: viableToken,
+				jwtSecret: "secret",
+			},
+			want: expectedId,
+		},
+		"Expired JWT": {
+			input: Input{
+				jwtString: expiredToken,
+				jwtSecret: "secret",
+			},
+			want: uuid.Nil,
+		},
+		"Wrong Secret": {
+			input: Input{
+				jwtString: viableToken,
+				jwtSecret: "wrong secret",
+			},
+			want: uuid.Nil,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, _ := ValidateJWT(test.input.jwtString, test.input.jwtSecret)
+			if got != test.want {
+				t.Fatalf(
+					"|TEST: %20s| got value: %5v, want value: %5v",
+					name, got, test.want,
+				)
+			}
+		})
+	}
+}
+
 func mockTimeNow() time.Time {
 	return time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
+}
+
+func createExpiredToken(id uuid.UUID, secret string) string {
+	token, _ := createJWT(id, "secret", time.Duration(1), "test", mockTimeNow)
+	return token
 }
