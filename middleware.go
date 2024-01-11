@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 	"strings"
@@ -35,15 +36,26 @@ func (cfg apiConfig) middlewareAuth(handler authedHandler) http.Handler {
 			respondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+
 		id, err := auth.ValidateAccessToken(accessToken, cfg.Secret)
 		if err != nil {
 			if err == auth.ErrTokenExpired {
-				respondWithError(w, http.StatusBadGateway, err.Error())
+				respondWithError(w, http.StatusUnauthorized, err.Error())
+				return
 			}
 			respondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		// TODO: Add a check with the DB to ensure the id is tied to a user
+
+		if _, err := cfg.DB.GetUserById(r.Context(), id); err != nil {
+			if err == sql.ErrNoRows {
+				respondWithError(w, http.StatusNotFound, err.Error())
+				return
+			}
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
 		handler(w, r, id)
 	})
 }
