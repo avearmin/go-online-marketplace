@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -48,7 +49,7 @@ func CreateRefreshToken(id uuid.UUID, jwtSecret string) (string, error) {
 
 func calcExpiry(hours int) (time.Duration, error) {
 	if hours < 0 {
-		return 0, errors.New("Negative hours")
+		return 0, errors.New("negative hours")
 	}
 	return time.Duration(hours) * time.Hour, nil
 }
@@ -59,6 +60,12 @@ func validateJWT(jwtString, jwtSecret, jwtIssuer string) (uuid.UUID, error) {
 		return []byte(jwtSecret), nil
 	})
 	if err != nil {
+		if strings.Contains(err.Error(), jwt.ErrTokenSignatureInvalid.Error()) {
+			return uuid.Nil, ErrInvalidSignature
+		}
+		if strings.Contains(err.Error(), jwt.ErrTokenExpired.Error()) {
+			return uuid.Nil, ErrTokenExpired
+		}
 		return uuid.Nil, err
 	}
 
@@ -72,7 +79,7 @@ func validateJWT(jwtString, jwtSecret, jwtIssuer string) (uuid.UUID, error) {
 		return uuid.Nil, err
 	}
 	if issuer != jwtIssuer {
-		return uuid.Nil, errors.New("invalid issuer")
+		return uuid.Nil, ErrInvalidIssuer
 	}
 
 	id, err := uuid.Parse(idString)
