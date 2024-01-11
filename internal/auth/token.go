@@ -53,7 +53,7 @@ func calcExpiry(hours int) (time.Duration, error) {
 	return time.Duration(hours) * time.Hour, nil
 }
 
-func ValidateJWT(jwtString, jwtSecret string) (uuid.UUID, error) {
+func validateJWT(jwtString, jwtSecret, jwtIssuer string) (uuid.UUID, error) {
 	var claims jwt.RegisteredClaims
 	token, err := jwt.ParseWithClaims(jwtString, &claims, func(*jwt.Token) (interface{}, error) {
 		return []byte(jwtSecret), nil
@@ -71,7 +71,7 @@ func ValidateJWT(jwtString, jwtSecret string) (uuid.UUID, error) {
 	if err != nil {
 		return uuid.Nil, err
 	}
-	if issuer != AccessIssuer {
+	if issuer != jwtIssuer {
 		return uuid.Nil, errors.New("invalid issuer")
 	}
 
@@ -81,4 +81,12 @@ func ValidateJWT(jwtString, jwtSecret string) (uuid.UUID, error) {
 	}
 
 	return id, nil
+}
+
+func ValidateAccessToken(jwtString, jwtSecret string) (uuid.UUID, error) {
+	return validateJWT(jwtString, jwtSecret, AccessIssuer)
+}
+
+func ValidateRefreshToken(jwtString, jwtSecret string) (uuid.UUID, error) {
+	return validateJWT(jwtString, jwtSecret, RefreshIssuer)
 }

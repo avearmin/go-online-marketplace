@@ -83,12 +83,13 @@ func TestCalcExpiry(t *testing.T) {
 
 func TestValidateJWT(t *testing.T) {
 	expectedId, _ := uuid.Parse("123e4567-e89b-12d3-a456-426614174000")
-	viableToken, _ := CreateAccessToken(expectedId, "secret")
+	viableToken := createViableToken(expectedId, "secret")
 	expiredToken := createExpiredToken(expectedId, "secret")
 
 	type Input struct {
 		jwtString string
 		jwtSecret string
+		jwtIssuer string
 	}
 
 	tests := map[string]struct {
@@ -99,6 +100,7 @@ func TestValidateJWT(t *testing.T) {
 			input: Input{
 				jwtString: viableToken,
 				jwtSecret: "secret",
+				jwtIssuer: "test",
 			},
 			want: expectedId,
 		},
@@ -106,6 +108,7 @@ func TestValidateJWT(t *testing.T) {
 			input: Input{
 				jwtString: expiredToken,
 				jwtSecret: "secret",
+				jwtIssuer: "test",
 			},
 			want: uuid.Nil,
 		},
@@ -113,6 +116,15 @@ func TestValidateJWT(t *testing.T) {
 			input: Input{
 				jwtString: viableToken,
 				jwtSecret: "wrong secret",
+				jwtIssuer: "test",
+			},
+			want: uuid.Nil,
+		},
+		"Wrong Issuer": {
+			input: Input{
+				jwtString: viableToken,
+				jwtSecret: viableToken,
+				jwtIssuer: "wrong issuer",
 			},
 			want: uuid.Nil,
 		},
@@ -120,7 +132,7 @@ func TestValidateJWT(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, _ := ValidateJWT(test.input.jwtString, test.input.jwtSecret)
+			got, _ := validateJWT(test.input.jwtString, test.input.jwtSecret, test.input.jwtIssuer)
 			if got != test.want {
 				t.Fatalf(
 					"|TEST: %20s| got value: %5v, want value: %5v",
@@ -135,7 +147,12 @@ func mockTimeNow() time.Time {
 	return time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
 }
 
+func createViableToken(id uuid.UUID, secret string) string {
+	token, _ := createJWT(id, secret, time.Duration(36000000000), "test", time.Now)
+	return token
+}
+
 func createExpiredToken(id uuid.UUID, secret string) string {
-	token, _ := createJWT(id, "secret", time.Duration(1), "test", mockTimeNow)
+	token, _ := createJWT(id, secret, time.Duration(1), "test", mockTimeNow)
 	return token
 }
