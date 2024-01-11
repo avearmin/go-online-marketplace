@@ -12,13 +12,13 @@ import (
 func (cfg apiConfig) handleItems(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
-		cfg.postItems(w, r)
+		cfg.middlewareAuth(cfg.postItems)
 	default:
 		respondWithError(w, http.StatusMethodNotAllowed, "")
 	}
 }
 
-func (cfg apiConfig) postItems(w http.ResponseWriter, r *http.Request) {
+func (cfg apiConfig) postItems(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 
@@ -53,7 +53,7 @@ func (cfg apiConfig) postItems(w http.ResponseWriter, r *http.Request) {
 		Description: parameters.Description,
 		Price:       parameters.Price,
 		Sold:        false,
-		// TODO: Add mechanism for seller id
+		SellerID: id,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error creating item in DB")
