@@ -36,11 +36,14 @@ func (cfg apiConfig) middlewareAuth(handler authedHandler) http.Handler {
 			return
 		}
 		id, err := auth.ValidateAccessToken(accessToken, cfg.Secret)
-		// TODO: Add a check to see if the error is an expired token; requires updating the ValidateAccessToken function 
 		if err != nil {
+			if err == auth.ErrTokenExpired {
+				respondWithError(w, http.StatusBadGateway, err.Error())
+			}
 			respondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		// TODO: Add a check with the DB to ensure the id is tied to a user
 		handler(w, r, id)
 	})
 }
@@ -49,12 +52,10 @@ func readAccessToken(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 	fields := strings.Fields(authHeader)
 	if len(fields) < 2 {
-		return "", errors.New("Malformed Authorization header")
+		return "", errors.New("malformed authorization header")
 	}
 	if fields[0] != "Bearer" {
-		return "", errors.New("Bearer not found in header")
+		return "", errors.New("bearer not found in header")
 	}
 	return fields[1], nil
 }
-
-

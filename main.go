@@ -14,7 +14,7 @@ import (
 )
 
 type apiConfig struct {
-	DB *database.Queries
+	DB     *database.Queries
 	Secret string
 }
 
