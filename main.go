@@ -15,6 +15,7 @@ import (
 
 type apiConfig struct {
 	DB *database.Queries
+	Secret string
 }
 
 func main() {
@@ -27,7 +28,12 @@ func main() {
 		log.Fatal("Port has not been specified.")
 	}
 
-	config := apiConfig{}
+	secret := os.Getenv("SECRET")
+	if secret == "" {
+		log.Fatal("Secret has not been specified.")
+	}
+
+	config := apiConfig{Secret: secret}
 
 	dbConn := os.Getenv("DB_CONN_STRING")
 	if dbConn == "" {
