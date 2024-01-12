@@ -37,7 +37,7 @@ func (cfg apiConfig) middlewareAuth(handler authedHandler) http.Handler {
 			return
 		}
 
-		id, err := auth.ValidateAccessToken(accessToken, cfg.Secret)
+		id, err := auth.ValidateAccessToken(accessToken, cfg.JwtSecret)
 		if err != nil {
 			if err == auth.ErrTokenExpired {
 				respondWithError(w, http.StatusUnauthorized, err.Error())

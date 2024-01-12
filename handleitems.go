@@ -12,7 +12,7 @@ import (
 func (cfg apiConfig) handleItems(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
-		cfg.middlewareAuth(cfg.postItems)
+		cfg.middlewareAuth(cfg.postItems).ServeHTTP(w, r)
 	default:
 		respondWithError(w, http.StatusMethodNotAllowed, "")
 	}
@@ -53,10 +53,10 @@ func (cfg apiConfig) postItems(w http.ResponseWriter, r *http.Request, id uuid.U
 		Description: parameters.Description,
 		Price:       parameters.Price,
 		Sold:        false,
-		SellerID: id,
+		SellerID:    id,
 	})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Error creating item in DB")
+		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
