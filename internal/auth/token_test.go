@@ -53,7 +53,7 @@ func TestCreateJWT(t *testing.T) {
 				test.input.nowFunc,
 			); value != test.want.value || err != test.want.err {
 				t.Fatalf(
-					"|TEST: %20s| got value: %5v, got err: %5v, want value: %5v, want err:%5v",
+					"|TEST: %20s| got value: %5v, got err: %5v | want value: %5v, want err:%5v",
 					name, value, err, test.want.value, test.want.err,
 				)
 			}
@@ -92,9 +92,14 @@ func TestValidateJWT(t *testing.T) {
 		jwtIssuer string
 	}
 
+	type Want struct {
+		value uuid.UUID
+		err   error
+	}
+
 	tests := map[string]struct {
 		input Input
-		want  uuid.UUID
+		want  Want
 	}{
 		"Normal JWT": {
 			input: Input{
@@ -102,7 +107,10 @@ func TestValidateJWT(t *testing.T) {
 				jwtSecret: "secret",
 				jwtIssuer: "test",
 			},
-			want: expectedId,
+			want: Want{
+				value: expectedId,
+				err:   nil,
+			},
 		},
 		"Expired JWT": {
 			input: Input{
@@ -110,7 +118,10 @@ func TestValidateJWT(t *testing.T) {
 				jwtSecret: "secret",
 				jwtIssuer: "test",
 			},
-			want: uuid.Nil,
+			want: Want{
+				value: uuid.Nil,
+				err:   ErrTokenExpired,
+			},
 		},
 		"Wrong Secret": {
 			input: Input{
@@ -118,25 +129,31 @@ func TestValidateJWT(t *testing.T) {
 				jwtSecret: "wrong secret",
 				jwtIssuer: "test",
 			},
-			want: uuid.Nil,
+			want: Want{
+				value: uuid.Nil,
+				err:   ErrInvalidSignature,
+			},
 		},
 		"Wrong Issuer": {
 			input: Input{
 				jwtString: viableToken,
-				jwtSecret: viableToken,
+				jwtSecret: "secret",
 				jwtIssuer: "wrong issuer",
 			},
-			want: uuid.Nil,
+			want: Want{
+				value: uuid.Nil,
+				err:   ErrInvalidIssuer,
+			},
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, _ := validateJWT(test.input.jwtString, test.input.jwtSecret, test.input.jwtIssuer)
-			if got != test.want {
+			value, err := validateJWT(test.input.jwtString, test.input.jwtSecret, test.input.jwtIssuer)
+			if value != test.want.value || err != test.want.err {
 				t.Fatalf(
-					"|TEST: %20s| got value: %5v, want value: %5v",
-					name, got, test.want,
+					"|TEST: %20s| got value: %5v, got err: %5v, | want value: %5v, want err %5v",
+					name, value, err, test.want.value, test.want.err,
 				)
 			}
 		})

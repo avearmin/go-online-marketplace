@@ -14,7 +14,8 @@ import (
 )
 
 type apiConfig struct {
-	DB *database.Queries
+	DB        *database.Queries
+	JwtSecret string
 }
 
 func main() {
@@ -27,7 +28,12 @@ func main() {
 		log.Fatal("Port has not been specified.")
 	}
 
-	config := apiConfig{}
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("Secret has not been specified.")
+	}
+
+	config := apiConfig{JwtSecret: jwtSecret}
 
 	dbConn := os.Getenv("DB_CONN_STRING")
 	if dbConn == "" {
