@@ -1,12 +1,11 @@
 package auth
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 )
-
 
 func GetGooglePublicKey(keyID string) (string, error) {
 	resp, err := http.Get("https://www.googleapis.com/oauth2/v1/certs")
@@ -16,7 +15,7 @@ func GetGooglePublicKey(keyID string) (string, error) {
 
 	dat, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err	
+		return "", err
 	}
 
 	myResp := map[string]string{}

@@ -33,11 +33,11 @@ func ValidateGoogleJWT(tokenString, pem, clientId string) (GoogleClaims, error) 
 		}
 		return GoogleClaims{}, err
 	}
-	
+
 	if claimsStruct.Issuer != "accounts.google.com" && claimsStruct.Issuer != "https://accounts.google.com" {
 		return GoogleClaims{}, errors.New("iss is invalid")
 	}
- 
+
 	if ok := validateClaimsAudience(claimsStruct.Audience, clientId); !ok {
 		return GoogleClaims{}, errors.New("aud is invalid")
 	}
@@ -53,4 +53,3 @@ func validateClaimsAudience(claimsAudience jwt.ClaimStrings, clientId string) bo
 	}
 	return false
 }
-
