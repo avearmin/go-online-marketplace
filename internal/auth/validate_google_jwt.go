@@ -10,6 +10,7 @@ import (
 type GoogleClaims struct {
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`
+	Name          string `json:"name"`
 	jwt.RegisteredClaims
 }
 

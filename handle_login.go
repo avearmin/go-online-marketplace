@@ -3,8 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-
-//	"github.com/avearmin/gorage-sale/internal/auth"
+	//	"github.com/avearmin/gorage-sale/internal/auth"
 )
 
 func (cfg apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +55,7 @@ func (cfg apiConfig) getLogin(w http.ResponseWriter, r *http.Request) {
 	//			ID:        uuid.New(),
 	//			CreatedAt: time.Now().UTC(),
 	//			UpdatedAt: time.Now().UTC(),
-	//			Name:      claims.FirstName + " " claims.LastName,
+	//			Name:      claims.Name,
 	//			Email:     parameters.Email,
 	//		})
 	//		if err != nil {
