@@ -5,28 +5,30 @@ import (
 	"encoding/base64"
 )
 
-type stateStore struct {
+type StateStore struct {
 	store map[string]bool
 }
 
-func NewStateStore() *stateStore {
-	return &stateStore{
+func NewStateStore() *StateStore {
+	return &StateStore{
 		store: make(map[string]bool),
 	}
 }
 
-func (s *stateStore) GenerateState() string {
+func (s *StateStore) GenerateState() (string, error) {
 	b := make([]byte, 16)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
 	state := base64.URLEncoding.EncodeToString(b)
 	s.store[state] = true
-	return state
+	return state, nil
 }
 
-func (s *stateStore) ValidateState(state string) bool {
+func (s *StateStore) ValidateState(state string) bool {
 	return s.store[state]
 }
 
-func (s *stateStore) DeleteState(state string) {
+func (s *StateStore) DeleteState(state string) {
 	delete(s.store, state)
 }
