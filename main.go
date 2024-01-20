@@ -73,6 +73,9 @@ func main() {
 
 	mux.HandleFunc("/v1/status", handleStatus)
 
+	mux.HandleFunc("/v1/auth/google/login", config.handleOAuthGoogleLogin)
+	mux.HandleFunc("/v1/auth/google/callback", config.handleOAuthGoogleCallback)
+
 	if config.DB != nil {
 		mux.HandleFunc("/v1/users", config.handleUsers)
 		mux.HandleFunc("/v1/items", config.handleItems)
