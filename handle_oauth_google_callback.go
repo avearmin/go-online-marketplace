@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"time"
@@ -39,19 +40,13 @@ func (cfg apiConfig) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Reque
 	id, err := cfg.DB.GetUserIDByEmail(r.Context(), data.Email)
 	if err != nil {
 		if err == sql.ErrNoRows { // If the user does not exist, then we create one
-			id = uuid.New() // Yes I'm not shadowing id; I'm assigning id to the new user id
-			_, err := cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
-				ID:        id,
-				CreatedAt: time.Now().UTC(),
-				UpdatedAt: time.Now().UTC(),
-				Name:      data.Name,
-				Email:     data.Email,
-			})
+			user, err := cfg.createUser(r.Context(), data.Name, data.Email)
 			if err != nil {
 				respondWithError(w, http.StatusInternalServerError, "Error creating user in DB")
 				return
 
 			}
+			id = user.ID
 		} else {
 			respondWithError(w, http.StatusInternalServerError, "Error accessing DB")
 			return
@@ -77,4 +72,15 @@ func (cfg apiConfig) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Reque
 	payload.RefreshToken = refreshToken
 
 	respondWithJSON(w, http.StatusOK, payload)
+}
+
+func (cfg apiConfig) createUser(ctx context.Context, name, email string) (database.User, error) {
+	user, err := cfg.DB.CreateUser(ctx, database.CreateUserParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Name:      name,
+		Email:     email,
+	})
+	return user, err
 }
