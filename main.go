@@ -48,9 +48,15 @@ func main() {
 		log.Fatal("Client Secret has not been specified.")
 	}
 
-	oauthRedirectURL := ""
+	oauthRedirectURL := os.Getenv("REDIRECT_URL")
+	if oauthRedirectURL == "" {
+		log.Fatal("Redirect URL has not be specified.")
+	}
+
+	stateStore := oauth2.NewStateStore()
 
 	config := apiConfig{
+		StateStore:       stateStore,
 		JwtSecret:        jwtSecret,
 		ClientID:         clientID,
 		ClientSecret:     clientSecret,
@@ -90,6 +96,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
+	log.Println("Serving on port: " + port)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
