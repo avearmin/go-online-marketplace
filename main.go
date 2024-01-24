@@ -8,14 +8,19 @@ import (
 	"time"
 
 	"github.com/avearmin/gorage-sale/internal/database"
+	"github.com/avearmin/gorage-sale/internal/oauth2"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
-	DB        *database.Queries
-	JwtSecret string
+	DB               *database.Queries
+	JwtSecret        string
+	StateStore       oauth2.StateStore
+	ClientID         string
+	ClientSecret     string
+	OAuthRedirectURL string
 }
 
 func main() {
@@ -30,10 +35,33 @@ func main() {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		log.Fatal("Secret has not been specified.")
+		log.Fatal("JWT Secret has not been specified.")
 	}
 
-	config := apiConfig{JwtSecret: jwtSecret}
+	clientID := os.Getenv("CLIENT_ID")
+	if clientID == "" {
+		log.Fatal("Client ID has not been specified.")
+	}
+
+	clientSecret := os.Getenv("CLIENT_SECRET")
+	if clientSecret == "" {
+		log.Fatal("Client Secret has not been specified.")
+	}
+
+	oauthRedirectURL := os.Getenv("REDIRECT_URL")
+	if oauthRedirectURL == "" {
+		log.Fatal("Redirect URL has not be specified.")
+	}
+
+	stateStore := oauth2.NewStateStore()
+
+	config := apiConfig{
+		StateStore:       stateStore,
+		JwtSecret:        jwtSecret,
+		ClientID:         clientID,
+		ClientSecret:     clientSecret,
+		OAuthRedirectURL: oauthRedirectURL,
+	}
 
 	dbConn := os.Getenv("DB_CONN_STRING")
 	if dbConn == "" {
@@ -51,6 +79,9 @@ func main() {
 
 	mux.HandleFunc("/v1/status", handleStatus)
 
+	mux.HandleFunc("/v1/auth/google/login", config.handleOAuthGoogleLogin)
+	mux.HandleFunc("/v1/auth/google/callback", config.handleOAuthGoogleCallback)
+
 	if config.DB != nil {
 		mux.HandleFunc("/v1/users", config.handleUsers)
 		mux.HandleFunc("/v1/items", config.handleItems)
@@ -65,6 +96,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
+	log.Println("Serving on port: " + port)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
