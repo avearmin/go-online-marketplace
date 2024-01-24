@@ -9,13 +9,13 @@ type StateStore struct {
 	store map[string]bool
 }
 
-func NewStateStore() *StateStore {
-	return &StateStore{
+func NewStateStore() StateStore {
+	return StateStore{
 		store: make(map[string]bool),
 	}
 }
 
-func (s *StateStore) GenerateState() (string, error) {
+func (s StateStore) GenerateState() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
@@ -25,10 +25,10 @@ func (s *StateStore) GenerateState() (string, error) {
 	return state, nil
 }
 
-func (s *StateStore) ValidateState(state string) bool {
+func (s StateStore) ValidateState(state string) bool {
 	return s.store[state]
 }
 
-func (s *StateStore) DeleteState(state string) {
+func (s StateStore) DeleteState(state string) {
 	delete(s.store, state)
 }

@@ -17,7 +17,7 @@ import (
 type apiConfig struct {
 	DB               *database.Queries
 	JwtSecret        string
-	StateStore       *oauth2.StateStore
+	StateStore       oauth2.StateStore
 	ClientID         string
 	ClientSecret     string
 	OAuthRedirectURL string

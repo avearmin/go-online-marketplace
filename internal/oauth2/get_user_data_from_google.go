@@ -3,10 +3,10 @@ package oauth2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"net/http"
-	"fmt"
 )
 
 type GoogleUserData struct {
