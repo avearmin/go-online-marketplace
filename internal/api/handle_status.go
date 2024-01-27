@@ -1,10 +1,10 @@
-package main
+package api
 
 import (
 	"net/http"
 )
 
-func handleStatus(w http.ResponseWriter, r *http.Request) {
+func HandleStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

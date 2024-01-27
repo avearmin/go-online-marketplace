@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (cfg apiConfig) handleItems(w http.ResponseWriter, r *http.Request) {
+func (cfg config) HandleItems(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		cfg.middlewareAuth(cfg.postItems).ServeHTTP(w, r)
@@ -18,7 +18,7 @@ func (cfg apiConfig) handleItems(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (cfg apiConfig) postItems(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
+func (cfg config) postItems(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 

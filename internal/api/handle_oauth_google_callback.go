@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (cfg apiConfig) handleOAuthGoogleCallback(w http.ResponseWriter, r *http.Request) {
+func (cfg config) HandleOAuthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		cfg.getOAuthGoogleCallback(w, r)
@@ -21,7 +21,7 @@ func (cfg apiConfig) handleOAuthGoogleCallback(w http.ResponseWriter, r *http.Re
 	}
 }
 
-func (cfg apiConfig) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request) {
+func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	oauthState := r.FormValue("state")
 
 	if valid := cfg.StateStore.ValidateState(oauthState); !valid {
@@ -74,7 +74,7 @@ func (cfg apiConfig) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Reque
 	respondWithJSON(w, http.StatusOK, payload)
 }
 
-func (cfg apiConfig) createUser(ctx context.Context, name, email string) (database.User, error) {
+func (cfg config) createUser(ctx context.Context, name, email string) (database.User, error) {
 	user, err := cfg.DB.CreateUser(ctx, database.CreateUserParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
