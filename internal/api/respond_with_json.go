@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -20,17 +20,4 @@ func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
 	if _, err := w.Write(data); err != nil {
 		log.Printf("Error responding with JSON: %s", err)
 	}
-}
-
-func respondWithError(w http.ResponseWriter, code int, msg string) {
-	if code/100 == 5 {
-		log.Printf("Responding with status code %d: %s", code, msg)
-	}
-
-	var errorResponse struct {
-		Error string `json:"error"`
-	}
-	errorResponse.Error = msg
-
-	respondWithJSON(w, code, errorResponse)
 }

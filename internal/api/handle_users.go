@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (cfg apiConfig) handleUsers(w http.ResponseWriter, r *http.Request) {
+func (cfg config) HandleUsers(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		cfg.postUsers(w, r)
@@ -19,7 +19,7 @@ func (cfg apiConfig) handleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (cfg apiConfig) postUsers(w http.ResponseWriter, r *http.Request) {
+func (cfg config) postUsers(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 

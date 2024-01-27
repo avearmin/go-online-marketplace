@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"database/sql"
@@ -12,24 +12,7 @@ import (
 
 type authedHandler func(http.ResponseWriter, *http.Request, uuid.UUID)
 
-func middlewareCors(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "*")
-		w.Header().Set("Access-Control-Allow-Credentials", "false")
-		w.Header().Set("Access-Control-Max-Age", "300")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func (cfg apiConfig) middlewareAuth(handler authedHandler) http.Handler {
+func (cfg config) middlewareAuth(handler authedHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		accessToken, err := readAccessToken(r)
 		if err != nil {
