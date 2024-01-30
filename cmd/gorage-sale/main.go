@@ -15,8 +15,12 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 
+	fs := http.FileServer(http.Dir("./web/static/"))
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/", api.HandleHome)
+
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 	mux.HandleFunc("/v1/status", api.HandleStatus)
 
 	mux.HandleFunc("/v1/auth/google/login", apiCfg.HandleOAuthGoogleLogin)

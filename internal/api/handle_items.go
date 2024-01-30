@@ -18,7 +18,7 @@ func (cfg config) HandleItems(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (cfg config) postItems(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
+func (cfg config) postItems(w http.ResponseWriter, r *http.Request, user database.User) {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 
@@ -53,7 +53,7 @@ func (cfg config) postItems(w http.ResponseWriter, r *http.Request, id uuid.UUID
 		Description: parameters.Description,
 		Price:       parameters.Price,
 		Sold:        false,
-		SellerID:    id,
+		SellerID:    user.ID,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())

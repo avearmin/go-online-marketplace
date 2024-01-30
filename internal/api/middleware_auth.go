@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/avearmin/gorage-sale/internal/auth"
-	"github.com/google/uuid"
+	"github.com/avearmin/gorage-sale/internal/database"
 )
 
-type authedHandler func(http.ResponseWriter, *http.Request, uuid.UUID)
+type authedHandler func(http.ResponseWriter, *http.Request, database.User)
 
-func (cfg config) middlewareAuth(handler authedHandler) http.Handler {
+func (cfg config) middlewareAuth(handler authedHandler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		accessToken, err := readAccessToken(r)
 		if err != nil {
@@ -30,7 +30,8 @@ func (cfg config) middlewareAuth(handler authedHandler) http.Handler {
 			return
 		}
 
-		if _, err := cfg.DB.GetUserById(r.Context(), id); err != nil {
+		user, err := cfg.DB.GetUserById(r.Context(), id)
+		if err != nil {
 			if err == sql.ErrNoRows {
 				respondWithError(w, http.StatusNotFound, err.Error())
 				return
@@ -39,7 +40,7 @@ func (cfg config) middlewareAuth(handler authedHandler) http.Handler {
 			return
 		}
 
-		handler(w, r, id)
+		handler(w, r, user)
 	})
 }
 
