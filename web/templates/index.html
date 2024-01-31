@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="/static/js/htmx.min.js"></script>
+	<link href="/static/css/output.css" rel="stylesheet">
+	<title>Gorage Sale</title>
+</head>
+<body class="flex flex-col min-h-screen">
+	
+	<header class="flex items-center justify-around p-5 bg-gray-900 text-white">
+    <div id="left" class="font-semibold text-xl">
+        GORAGE SALE
+    </div>
+    <div id="middle">
+        <form action="/search" method="get" class="flex">
+            <input type="text" class="rounded-md p-2 text-black" placeholder="Search...">
+            <input type="submit" value="Search" class="ml-2 bg-yellow-500 hover:bg-yellow-600 rounded-md p-2 cursor-pointer">
+        </form>
+    </div>
+    <div id="right" class="flex space-x-4">
+        <button id="login-button" class="bg-blue-500 hover:bg-blue-600 rounded-md p-2">
+            Login
+        </button>
+        <button id="shopping-cart" class="bg-green-500 hover:bg-green-600 rounded-md p-2">
+            Shopping Cart
+        </button>
+    </div>
+	</header>
+
+	<main class="flex-grow">
+
+	</main>
+
+	<footer class="bg-gray-800 text-white p-4 text-center">
+    <p>Created By <a href="https://github.com/avearmin/gorage-sale" class="text-blue-400 hover:text-blue-500">Armin</a></p>
+	</footer>
+	
+</body>
+</html>
