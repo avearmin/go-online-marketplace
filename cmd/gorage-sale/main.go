@@ -21,13 +21,9 @@ func main() {
 	mux.HandleFunc("/", api.HandleHome)
 
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
-	mux.HandleFunc("/v1/status", api.HandleStatus)
 
 	mux.HandleFunc("/v1/auth/google/login", apiCfg.HandleOAuthGoogleLogin)
 	mux.HandleFunc("/v1/auth/google/callback", apiCfg.HandleOAuthGoogleCallback)
-
-	mux.HandleFunc("/v1/users", apiCfg.HandleUsers)
-	mux.HandleFunc("/v1/items", apiCfg.HandleItems)
 
 	corsMux := api.MiddlewareCors(mux)
 
