@@ -10,37 +10,38 @@ import (
 	"github.com/avearmin/gorage-sale/internal/database"
 )
 
-type authedHandler func(http.ResponseWriter, *http.Request, database.User)
+type authedUser struct {
+	IsAuthed bool
+	User     database.User
+}
+
+type authedHandler func(http.ResponseWriter, *http.Request, authedUser)
 
 func (cfg config) middlewareAuth(handler authedHandler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		isAuthed := true // default to true, and we set it to false for any error
+
 		accessToken, err := readAccessToken(r)
 		if err != nil {
-			respondWithError(w, http.StatusBadRequest, err.Error())
-			return
+			isAuthed = false
 		}
 
 		id, err := auth.ValidateAccessToken(accessToken, cfg.JwtSecret)
 		if err != nil {
-			if err == auth.ErrTokenExpired {
-				respondWithError(w, http.StatusUnauthorized, err.Error())
-				return
-			}
-			respondWithError(w, http.StatusBadRequest, err.Error())
-			return
+			isAuthed = false
 		}
 
 		user, err := cfg.DB.GetUserById(r.Context(), id)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				respondWithError(w, http.StatusNotFound, err.Error())
-				return
-			}
-			respondWithError(w, http.StatusInternalServerError, err.Error())
-			return
+			isAuthed = false
 		}
 
-		handler(w, r, user)
+		authUser := authedUser{
+			IsAuthed: isAuthed,
+			User:     user,
+		}
+
+		handler(w, r, authUser)
 	})
 }
 
