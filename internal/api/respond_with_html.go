@@ -12,6 +12,7 @@ import (
 // 	}
 
 // 	w.WriteHeader(code)
+//  w.Header().Set("content-type", "text/html")
 
 // 	if err := tmpl.Execute(w, data); err != nil {
 // 		return err
@@ -26,6 +27,7 @@ func respondWithHTMLFromFile(w http.ResponseWriter, code int, tmplPath string, d
 	}
 
 	w.WriteHeader(code)
+	w.Header().Set("content-type", "text/html")
 
 	if err := tmpl.Execute(w, data); err != nil {
 		return err

@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -22,12 +23,19 @@ func getErrorPage(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	message := r.URL.Query().Get("message")
 
+	unescapedMessage, err := url.QueryUnescape(message)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.ServeFile(w, r, defaultErrorTmplPath)
+		return
+	}
+
 	var data struct {
 		Code    string
 		Message string
 	}
 	data.Code = code
-	data.Message = message
+	data.Message = unescapedMessage
 
 	codeInt, err := strconv.Atoi(code)
 	if err != nil { // The only reason why this should be an error is if a user is writing a non-status code in the url
