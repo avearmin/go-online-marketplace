@@ -9,7 +9,7 @@ func HandleHome(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		getHomePage(w, r)
 	default:
-		respondWithError(w, http.StatusMethodNotAllowed, "")
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 

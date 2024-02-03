@@ -17,7 +17,7 @@ func (cfg config) HandleOAuthGoogleCallback(w http.ResponseWriter, r *http.Reque
 	case http.MethodGet:
 		cfg.getOAuthGoogleCallback(w, r)
 	default:
-		respondWithError(w, http.StatusMethodNotAllowed, "")
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
@@ -25,7 +25,7 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 	oauthState := r.FormValue("state")
 
 	if valid := cfg.StateStore.ValidateState(oauthState); !valid {
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		redirectToErrorPage(w, r, http.StatusUnauthorized, "Access Denied")
 		return
 	}
 	cfg.StateStore.DeleteState(oauthState)
@@ -33,7 +33,7 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 	code := r.FormValue("code")
 	data, err := oauth2.GetUserDataFromGoogle(cfg.ClientID, cfg.ClientSecret, cfg.OAuthRedirectURL, code, r.Context())
 	if err != nil {
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
 		return
 	}
 
@@ -42,25 +42,25 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 		if err == sql.ErrNoRows { // If the user does not exist, then we create one
 			user, err := cfg.createUser(r.Context(), data.Name, data.Email)
 			if err != nil {
-				respondWithError(w, http.StatusInternalServerError, "Error creating user in DB")
+				redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
 				return
 
 			}
 			id = user.ID
 		} else {
-			respondWithError(w, http.StatusInternalServerError, "Error accessing DB")
+			redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
 			return
 		}
 	}
 
 	accessToken, err := auth.CreateAccessToken(id, cfg.JwtSecret)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "error creating access token")
+		redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
 		return
 	}
 	refreshToken, err := auth.CreateRefreshToken(id, cfg.JwtSecret)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "error creating refresh token")
+		redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 	payload.AccessToken = accessToken
 	payload.RefreshToken = refreshToken
 
-	respondWithJSON(w, http.StatusOK, payload)
+	// TODO: put tokens into cookies
 }
 
 func (cfg config) createUser(ctx context.Context, name, email string) (database.User, error) {
