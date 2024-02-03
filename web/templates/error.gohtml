@@ -21,7 +21,9 @@
     </div>
     <div
       hx-get="/v1/ui/login-user-widget"
-      hw-swap="outerhtml"
+	  hx-trigger="load"
+	  hx-target="this"
+      hw-swap="outerHTML"
     >
     </div>
 	</header>
@@ -29,8 +31,8 @@
 	<main class="flex-grow">
 		<div id="error" class="content-center">
 			<h1>whoops!</h1>
-			<p>{{.code}}</p>
-			<p>{{.message}}</p>
+			<p>{{.Code}}</p>
+			<p>{{.Message}}</p>
 		</div>
 	</main>
 	

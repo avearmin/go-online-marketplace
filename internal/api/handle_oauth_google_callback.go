@@ -33,7 +33,7 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 	code := r.FormValue("code")
 	data, err := oauth2.GetUserDataFromGoogle(cfg.ClientID, cfg.ClientSecret, cfg.OAuthRedirectURL, code, r.Context())
 	if err != nil {
-		redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
+		redirectToErrorPage(w, r, http.StatusInternalServerError, internalErrMsgForUser)
 		return
 	}
 
@@ -42,25 +42,24 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 		if err == sql.ErrNoRows { // If the user does not exist, then we create one
 			user, err := cfg.createUser(r.Context(), data.Name, data.Email)
 			if err != nil {
-				redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
+				redirectToErrorPage(w, r, http.StatusInternalServerError, internalErrMsgForUser)
 				return
-
 			}
 			id = user.ID
 		} else {
-			redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
+			redirectToErrorPage(w, r, http.StatusInternalServerError, internalErrMsgForUser)
 			return
 		}
 	}
 
 	accessToken, err := auth.CreateAccessToken(id, cfg.JwtSecret)
 	if err != nil {
-		redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
+		redirectToErrorPage(w, r, http.StatusInternalServerError, internalErrMsgForUser)
 		return
 	}
 	refreshToken, err := auth.CreateRefreshToken(id, cfg.JwtSecret)
 	if err != nil {
-		redirectToErrorPage(w, r, http.StatusInternalServerError, "Seems like we're the ones with the problem. We're looking into it.")
+		redirectToErrorPage(w, r, http.StatusInternalServerError, internalErrMsgForUser)
 		return
 	}
 

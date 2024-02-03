@@ -6,6 +6,10 @@ import (
 	"net/url"
 )
 
+const (
+	internalErrMsgForUser = `Seems like we're the ones with the problem. We're looking into it.`
+)
+
 func redirectToErrorPage(w http.ResponseWriter, r *http.Request, code int, message string) {
 	escapedMessage := url.QueryEscape(message)
 

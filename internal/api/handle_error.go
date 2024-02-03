@@ -16,7 +16,7 @@ func HandleError(w http.ResponseWriter, r *http.Request) {
 }
 
 func getErrorPage(w http.ResponseWriter, r *http.Request) {
-	errorTmplPath := ".web/templates/error.gohtml"
+	errorTmplPath := "./web/templates/error.gohtml"
 	defaultErrorTmplPath := "./web/templates/default-error.html"
 
 	code := r.URL.Query().Get("code")

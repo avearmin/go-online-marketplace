@@ -5,19 +5,19 @@ import (
 	"net/http"
 )
 
-func respondWithHTML(w http.ResponseWriter, code int, tmplString string, data any) error {
-	tmpl, err := template.New("template").Parse(tmplString)
-	if err != nil {
-		return err
-	}
+// func respondWithHTML(w http.ResponseWriter, code int, tmplString string, data any) error {
+// 	tmpl, err := template.New("template").Parse(tmplString)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	w.WriteHeader(code)
+// 	w.WriteHeader(code)
 
-	if err := tmpl.Execute(w, data); err != nil {
-		return err
-	}
-	return nil
-}
+// 	if err := tmpl.Execute(w, data); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func respondWithHTMLFromFile(w http.ResponseWriter, code int, tmplPath string, data any) error {
 	tmpl, err := template.ParseFiles(tmplPath)
