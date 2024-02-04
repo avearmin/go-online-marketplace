@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
@@ -39,7 +40,7 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 
 	id, err := cfg.DB.GetUserIDByEmail(r.Context(), data.Email)
 	if err != nil {
-		if err == sql.ErrNoRows { // If the user does not exist, then we create one
+		if errors.Is(err, sql.ErrNoRows) { // If the user does not exist, then we create one
 			user, err := cfg.createUser(r.Context(), data.Name, data.Email)
 			if err != nil {
 				logInternalErrorAndRedirectToErrorPage(w, r, err)
@@ -63,14 +64,19 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var payload struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
+	accessCookie := http.Cookie{
+		Name:  "gorage-sale-access-token",
+		Value: accessToken,
 	}
-	payload.AccessToken = accessToken
-	payload.RefreshToken = refreshToken
+	refreshCookie := http.Cookie{
+		Name:  "gorage-sale-refresh-token",
+		Value: refreshToken,
+	}
 
-	// TODO: put tokens into cookies
+	http.SetCookie(w, &accessCookie)
+	http.SetCookie(w, &refreshCookie)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (cfg config) createUser(ctx context.Context, name, email string) (database.User, error) {
