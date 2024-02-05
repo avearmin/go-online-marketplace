@@ -1,12 +1,9 @@
 package api
 
 import (
-	"errors"
-	"net/http"
-	"strings"
-
 	"github.com/avearmin/gorage-sale/internal/auth"
 	"github.com/avearmin/gorage-sale/internal/database"
+	"net/http"
 )
 
 type authedUser struct {
@@ -45,13 +42,10 @@ func (cfg config) middlewareAuth(handler authedHandler) http.HandlerFunc {
 }
 
 func readAccessToken(r *http.Request) (string, error) {
-	authHeader := r.Header.Get("Authorization")
-	fields := strings.Fields(authHeader)
-	if len(fields) < 2 {
-		return "", errors.New("malformed authorization header")
+	accessCookie, err := r.Cookie("gorage-sale-access-token")
+	if err != nil {
+		return "", err
 	}
-	if fields[0] != "Bearer" {
-		return "", errors.New("bearer not found in header")
-	}
-	return fields[1], nil
+
+	return accessCookie.Value, nil
 }
