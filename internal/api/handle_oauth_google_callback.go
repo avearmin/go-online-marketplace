@@ -64,21 +64,8 @@ func (cfg config) getOAuthGoogleCallback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	accessCookie := http.Cookie{
-		Name:    "gorage-sale-access-token",
-		Value:   accessToken,
-		Expires: time.Now().Add(1 * time.Hour),
-		Path:    "/",
-	}
-	refreshCookie := http.Cookie{
-		Name:    "gorage-sale-refresh-token",
-		Value:   refreshToken,
-		Expires: time.Now().Add(1440 * time.Hour),
-		Path:    "/",
-	}
-
-	http.SetCookie(w, &accessCookie)
-	http.SetCookie(w, &refreshCookie)
+	setAccessCookie(w, accessToken)
+	setRefreshCookie(w, refreshToken)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

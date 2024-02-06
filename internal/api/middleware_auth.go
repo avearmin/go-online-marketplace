@@ -1,51 +1,47 @@
 package api
 
 import (
+	"errors"
 	"github.com/avearmin/gorage-sale/internal/auth"
 	"github.com/avearmin/gorage-sale/internal/database"
 	"net/http"
 )
 
 type authedUser struct {
-	IsAuthed bool
-	User     database.User
+	Error error
+	User  database.User
 }
 
 type authedHandler func(http.ResponseWriter, *http.Request, authedUser)
 
 func (cfg config) middlewareAuth(handler authedHandler) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isAuthed := true // default to true, and we set it to false for any error
-
-		accessToken, err := readAccessToken(r)
-		if err != nil {
-			isAuthed = false
-		}
-
-		id, err := auth.ValidateAccessToken(accessToken, cfg.JwtSecret)
-		if err != nil {
-			isAuthed = false
-		}
-
-		user, err := cfg.DB.GetUserById(r.Context(), id)
-		if err != nil {
-			isAuthed = false
-		}
-
-		authUser := authedUser{
-			IsAuthed: isAuthed,
-			User:     user,
-		}
-
-		handler(w, r, authUser)
-	})
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := cfg.authenticateRequest(w, r)
+		handler(w, r, user)
+	}
 }
 
-func readAccessToken(r *http.Request) (string, error) {
+func (cfg config) authenticateRequest(w http.ResponseWriter, r *http.Request) authedUser {
 	accessCookie, err := r.Cookie("gorage-sale-access-token")
 	if err != nil {
-		return "", err
+		return authedUser{Error: err}
 	}
 
-	return accessCookie.Value, nil
+	accessToken := accessCookie.Value
+	id, err := auth.ValidateAccessToken(accessToken, cfg.JwtSecret)
+	if (err != nil && errors.Is(err, auth.ErrTokenExpired)) || isCookieExpired(accessCookie) {
+		id, err = refreshAccessToken(w, r, cfg.JwtSecret)
+		if err != nil {
+			return authedUser{Error: err}
+		}
+	} else {
+		return authedUser{Error: err}
+	}
+
+	user, err := cfg.DB.GetUserById(r.Context(), id)
+	if err != nil {
+		return authedUser{Error: err}
+	}
+
+	return authedUser{User: user}
 }
