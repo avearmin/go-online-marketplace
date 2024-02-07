@@ -27,15 +27,23 @@ func (cfg config) authenticateRequest(w http.ResponseWriter, r *http.Request) au
 		return authedUser{Error: err}
 	}
 
-	accessToken := accessCookie.Value
-	id, err := auth.ValidateAccessToken(accessToken, cfg.JwtSecret)
-	if (err != nil && errors.Is(err, auth.ErrTokenExpired)) || isCookieExpired(accessCookie) {
-		id, err = refreshAccessToken(w, r, cfg.JwtSecret)
+	if isCookieExpired(accessCookie) {
+		accessCookie, err = refreshAccessCookie(w, r, cfg.JwtSecret)
 		if err != nil {
 			return authedUser{Error: err}
 		}
-	} else {
-		return authedUser{Error: err}
+	}
+
+	id, err := auth.ValidateAccessToken(accessCookie.Value, cfg.JwtSecret)
+	if err != nil {
+		if errors.Is(err, auth.ErrTokenExpired) {
+			id, err = refreshAccessToken(w, r, cfg.JwtSecret)
+			if err != nil {
+				return authedUser{Error: err}
+			}
+		} else {
+			return authedUser{Error: err}
+		}
 	}
 
 	user, err := cfg.DB.GetUserById(r.Context(), id)
@@ -44,4 +52,15 @@ func (cfg config) authenticateRequest(w http.ResponseWriter, r *http.Request) au
 	}
 
 	return authedUser{User: user}
+}
+
+func refreshAccessCookie(w http.ResponseWriter, r *http.Request, jwtSecret string) (*http.Cookie, error) {
+	if _, err := refreshAccessToken(w, r, jwtSecret); err != nil {
+		return &http.Cookie{}, err
+	}
+	accessCookie, err := r.Cookie("gorage-sale-access-token")
+	if err != nil {
+		return &http.Cookie{}, err
+	}
+	return accessCookie, nil
 }
