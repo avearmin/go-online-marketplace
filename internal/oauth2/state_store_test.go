@@ -1,6 +1,9 @@
 package oauth2
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestValidateState(t *testing.T) {
 	tests := map[string]struct {
@@ -10,14 +13,21 @@ func TestValidateState(t *testing.T) {
 	}{
 		"valid": {
 			stateStore: StateStore{
-				store: map[string]bool{"state": true},
+				store: map[string]time.Time{"state": time.Now().Add(1 * time.Hour)},
 			},
 			input: "state",
 			want:  true,
 		},
-		"not valid": {
+		"state does not exist": {
 			stateStore: StateStore{
-				store: map[string]bool{},
+				store: map[string]time.Time{},
+			},
+			input: "state",
+			want:  false,
+		},
+		"state is expired": {
+			stateStore: StateStore{
+				store: map[string]time.Time{"state": time.Time{}}, // The zero value is always in the past
 			},
 			input: "state",
 			want:  false,
@@ -41,7 +51,7 @@ func TestDeleteState(t *testing.T) {
 	}{
 		"successful": {
 			stateStore: StateStore{
-				store: map[string]bool{"state": true},
+				store: map[string]time.Time{"state": time.Now()},
 			},
 			input: "state",
 			want:  false,
@@ -51,7 +61,7 @@ func TestDeleteState(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			test.stateStore.DeleteState(test.input)
-			if got := test.stateStore.store["state"]; got != test.want {
+			if _, got := test.stateStore.store["state"]; got != test.want {
 				t.Fatalf("|TEST: %20s| got: %5t, want: %5t", name, got, test.want)
 			}
 		})
