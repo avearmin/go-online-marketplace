@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
@@ -14,6 +15,7 @@ func TestValidateState(t *testing.T) {
 		"valid": {
 			stateStore: StateStore{
 				store: map[string]time.Time{"state": time.Now().Add(1 * time.Hour)},
+				mu:    &sync.Mutex{},
 			},
 			input: "state",
 			want:  true,
@@ -21,6 +23,7 @@ func TestValidateState(t *testing.T) {
 		"state does not exist": {
 			stateStore: StateStore{
 				store: map[string]time.Time{},
+				mu:    &sync.Mutex{},
 			},
 			input: "state",
 			want:  false,
@@ -28,6 +31,7 @@ func TestValidateState(t *testing.T) {
 		"state is expired": {
 			stateStore: StateStore{
 				store: map[string]time.Time{"state": time.Time{}}, // The zero value is always in the past
+				mu:    &sync.Mutex{},
 			},
 			input: "state",
 			want:  false,
@@ -52,6 +56,7 @@ func TestDeleteState(t *testing.T) {
 		"successful": {
 			stateStore: StateStore{
 				store: map[string]time.Time{"state": time.Now()},
+				mu:    &sync.Mutex{},
 			},
 			input: "state",
 			want:  false,
