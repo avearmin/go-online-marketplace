@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -51,7 +52,7 @@ func TestCreateJWT(t *testing.T) {
 				test.input.expiresIn,
 				test.input.issuer,
 				test.input.nowFunc,
-			); value != test.want.value || err != test.want.err {
+			); value != test.want.value || !errors.Is(err, test.want.err) {
 				t.Fatalf(
 					"|TEST: %20s| got value: %5v, got err: %5v | want value: %5v, want err:%5v",
 					name, value, err, test.want.value, test.want.err,

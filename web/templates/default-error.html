@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script src="/static/js/htmx.min.js"></script>
 	<link href="/static/css/output.css" rel="stylesheet">
-	<title>Gorage Sale</title>
+	<title>Internal Error</title>
 </head>
 <body class="flex flex-col min-h-screen">
 	
@@ -21,19 +21,21 @@
     </div>
     <div
       hx-get="/v1/ui/login-user-widget"
-      hx-trigger="load"
-      hx-target="this"
+			hx-trigger="load"
+			hx-target="this"
       hw-swap="outerHTML"
     >
     </div>
 	</header>
 
 	<main class="flex-grow">
-
+		<div id="error" class="content-center">
+			<h1>Whoops! Something went wrong</h1>
+		</div>
 	</main>
-
+	
 	<footer class="bg-gray-800 text-white p-4 text-center">
-    <p>Created By <a href="https://github.com/avearmin/gorage-sale" class="text-blue-400 hover:text-blue-500">Armin</a></p>
+    	<p>Created By <a href="https://github.com/avearmin/gorage-sale" class="text-blue-400 hover:text-blue-500">Armin</a></p>
 	</footer>
 	
 </body>

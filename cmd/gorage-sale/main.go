@@ -21,7 +21,8 @@ func main() {
 	mux.HandleFunc("/", api.HandleHome)
 
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
-
+	mux.HandleFunc("/error", api.HandleError)
+	mux.HandleFunc("/v1/ui/login-user-widget", apiCfg.HandleUILoginUserWidget)
 	mux.HandleFunc("/v1/auth/google/login", apiCfg.HandleOAuthGoogleLogin)
 	mux.HandleFunc("/v1/auth/google/callback", apiCfg.HandleOAuthGoogleCallback)
 

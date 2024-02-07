@@ -1,0 +1,9 @@
+{{if .Error}}
+    <a href="/v1/auth/google/login" id="login-button" class="bg-blue-500 hover:bg-blue-600 rounded-md p-2">
+        Login
+    </a>
+{{else}}
+    <button id="user-button" class="bg-black hover:hg-gray-800 text-white border border-white rounded-md p-2">
+        {{.User.Email}}
+    </button>
+{{end}}

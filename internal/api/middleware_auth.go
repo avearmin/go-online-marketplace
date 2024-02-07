@@ -1,57 +1,66 @@
 package api
 
 import (
-	"database/sql"
 	"errors"
-	"net/http"
-	"strings"
-
 	"github.com/avearmin/gorage-sale/internal/auth"
 	"github.com/avearmin/gorage-sale/internal/database"
+	"net/http"
 )
 
-type authedHandler func(http.ResponseWriter, *http.Request, database.User)
-
-func (cfg config) middlewareAuth(handler authedHandler) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		accessToken, err := readAccessToken(r)
-		if err != nil {
-			respondWithError(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		id, err := auth.ValidateAccessToken(accessToken, cfg.JwtSecret)
-		if err != nil {
-			if err == auth.ErrTokenExpired {
-				respondWithError(w, http.StatusUnauthorized, err.Error())
-				return
-			}
-			respondWithError(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		user, err := cfg.DB.GetUserById(r.Context(), id)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				respondWithError(w, http.StatusNotFound, err.Error())
-				return
-			}
-			respondWithError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		handler(w, r, user)
-	})
+type authedUser struct {
+	Error error
+	User  database.User
 }
 
-func readAccessToken(r *http.Request) (string, error) {
-	authHeader := r.Header.Get("Authorization")
-	fields := strings.Fields(authHeader)
-	if len(fields) < 2 {
-		return "", errors.New("malformed authorization header")
+type authedHandler func(http.ResponseWriter, *http.Request, authedUser)
+
+func (cfg config) middlewareAuth(handler authedHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := cfg.authenticateRequest(w, r)
+		handler(w, r, user)
 	}
-	if fields[0] != "Bearer" {
-		return "", errors.New("bearer not found in header")
+}
+
+func (cfg config) authenticateRequest(w http.ResponseWriter, r *http.Request) authedUser {
+	accessCookie, err := r.Cookie("gorage-sale-access-token")
+	if err != nil {
+		return authedUser{Error: err}
 	}
-	return fields[1], nil
+
+	if isCookieExpired(accessCookie) {
+		accessCookie, err = refreshAccessCookie(w, r, cfg.JwtSecret)
+		if err != nil {
+			return authedUser{Error: err}
+		}
+	}
+
+	id, err := auth.ValidateAccessToken(accessCookie.Value, cfg.JwtSecret)
+	if err != nil {
+		if errors.Is(err, auth.ErrTokenExpired) {
+			id, err = refreshAccessToken(w, r, cfg.JwtSecret)
+			if err != nil {
+				return authedUser{Error: err}
+			}
+		} else {
+			return authedUser{Error: err}
+		}
+	}
+
+	user, err := cfg.DB.GetUserById(r.Context(), id)
+	if err != nil {
+		return authedUser{Error: err}
+	}
+
+	return authedUser{User: user}
+}
+
+func refreshAccessCookie(w http.ResponseWriter, r *http.Request, jwtSecret string) (*http.Cookie, error) {
+	if _, err := refreshAccessToken(w, r, jwtSecret); err != nil {
+		return &http.Cookie{}, err
+	}
+	accessCookie, err := r.Cookie("gorage-sale-access-token")
+	if err != nil {
+		return &http.Cookie{}, err
+	}
+	return accessCookie, nil
 }
